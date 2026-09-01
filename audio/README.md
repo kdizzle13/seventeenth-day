@@ -7,8 +7,8 @@ cue you don't supply simply stays silent; the game runs identically without it.
 |-----------------|-------------------------------------------------|-------|
 | `title.mp3`     | from the Begin click, over the character select  | yes   |
 | `battle.mp3`    | bed under the duel                               | yes   |
-| `sink.mp3`      | the chariot wheel goes into the earth            | no    |
-| `transform.mp3` | signal loss / Mahā-Arjuna                        | no    |
+| `sink.mp3`      | **the wheel starts into the sand** — this is the big cue, it carries the whole transformation from there to the reveal | no |
+| `transform.mp3` | signal loss / Mahā-Arjuna (empty — `sink` covers this stretch now) | no |
 | `victory.mp3`   | ending — Karna is left standing                  | no    |
 | `defeat.mp3`    | ending — Arjuna is left standing                 | no    |
 | `shoot.mp3`     | bowstring release, every shot                    | no    |
