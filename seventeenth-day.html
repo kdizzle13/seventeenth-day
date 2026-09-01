@@ -343,6 +343,68 @@ button.knob:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
 .fighter.falling .blood-drop{animation:none;opacity:0;}
 
 /* sand thrown up where he lands */
+/* ---- Banner into the Hulk: the whole rig swells, tremors and turns ---- */
+.fighter.morphing svg{transform-origin:50% 100%;animation:morph-swell 4.2s ease-in forwards;}
+.fighter.morphing{animation:morph-turn 4.2s ease-in forwards;}
+@keyframes morph-turn{
+  0%  {filter:none;}
+  25% {filter:sepia(.3) saturate(1.8) hue-rotate(232deg) brightness(1.02);}
+  55% {filter:sepia(.62) saturate(3.2) hue-rotate(246deg) brightness(.94);}
+  80% {filter:sepia(.86) saturate(5) hue-rotate(255deg) brightness(.86) contrast(1.1);}
+  100%{filter:sepia(1) saturate(7) hue-rotate(261deg) brightness(.8) contrast(1.2);}
+}
+@keyframes morph-swell{
+  0%  {transform:translate(0,0) scale(1);}
+  10% {transform:translate(-1px,0) scale(1.01);}
+  20% {transform:translate(1px,0) scale(1.005);}
+  30% {transform:translate(-2px,1px) scale(1.04);}
+  40% {transform:translate(2px,-1px) scale(1.02);}
+  50% {transform:translate(-3px,1px) scale(1.08);}
+  58% {transform:translate(4px,-2px) scale(1.03);}
+  66% {transform:translate(-6px,2px) scale(1.13);}
+  73% {transform:translate(6px,-3px) scale(1.06);}
+  80% {transform:translate(-8px,3px) scale(1.19);}
+  86% {transform:translate(9px,-4px) scale(1.09);}
+  92% {transform:translate(-11px,4px) scale(1.26);}
+  96% {transform:translate(11px,-5px) scale(1.15);}
+  100%{transform:translate(0,0) scale(1.34);}
+}
+/* the team turns with him */
+.horse{transform-box:fill-box;transform-origin:50% 100%;}
+.fighter.morphing .horse{animation:beast .9s ease-in-out infinite;}
+@keyframes beast{
+  0%,100%{transform:translateY(0) rotate(0deg);}
+  35%{transform:translateY(-4px) rotate(-3deg);}
+  70%{transform:translateY(-1px) rotate(2deg);}
+}
+.krishna{transform-box:fill-box;transform-origin:50% 90%;}
+.fighter.morphing .krishna{animation:conspire 1.3s ease-in-out infinite;}
+@keyframes conspire{
+  0%,100%{transform:scale(1) rotate(0deg);}
+  50%{transform:scale(1.06) rotate(-2deg);}
+}
+/* the reveal */
+.fighter.erupting svg{transform-origin:50% 100%;animation:erupt .95s cubic-bezier(.18,1.5,.4,1);}
+@keyframes erupt{
+  0%  {transform:scale(.5);}
+  50% {transform:scale(1.14);}
+  75% {transform:scale(.97);}
+  100%{transform:scale(1);}
+}
+.burstfx{position:absolute;bottom:16%;z-index:33;pointer-events:none;transform:translateX(-50%);}
+.burstfx span{position:absolute;left:0;top:0;border-radius:50%;opacity:0;}
+.burstfx .ring{width:44px;height:44px;margin:-22px 0 0 -22px;border:5px solid #FF4FD0;
+  animation:shock 1s ease-out forwards;}
+.burstfx .r2{border-color:#FFC2EE;border-width:3px;animation-delay:.14s;}
+.burstfx .r3{border-color:#8E2A72;border-width:7px;animation-delay:.28s;}
+.burstfx .glare{width:34px;height:34px;margin:-17px 0 0 -17px;background:#fff;
+  animation:glare .55s ease-out forwards;}
+@keyframes shock{0%{opacity:0;transform:scale(.15);}12%{opacity:1;}100%{opacity:0;transform:scale(11);}}
+@keyframes glare{0%{opacity:0;transform:scale(.3);}22%{opacity:1;transform:scale(2.6);}100%{opacity:0;transform:scale(7);}}
+.field.flash::after{content:"";position:absolute;inset:0;background:#fff;z-index:34;
+  pointer-events:none;animation:whiteout .5s ease-out forwards;}
+@keyframes whiteout{0%{opacity:0;}16%{opacity:.88;}100%{opacity:0;}}
+
 .splash{position:absolute;bottom:8%;z-index:19;pointer-events:none;transform:translateX(-50%);}
 .splash i{position:absolute;display:block;border-radius:50%;background:#9A6C2C;opacity:0;
   width:var(--s);height:var(--s);animation:grain .95s ease-out forwards;}
@@ -686,7 +748,8 @@ function figure(who, rotted){
     var hoof = '<g fill="#160C05">'
       + '<ellipse cx="90" cy="107" rx="5.5" ry="3.4"/><ellipse cx="70" cy="107" rx="5.5" ry="3.4"/>'
       + '<ellipse cx="38" cy="107" rx="5.5" ry="3.4"/><ellipse cx="20" cy="107" rx="5.5" ry="3.4"/></g>';
-    return '<g transform="translate('+x+','+y+') scale('+s+')">'
+    return '<g class="horse" style="animation-delay:'+((x%9)*0.11).toFixed(2)+'s">'
+      + '<g transform="translate('+x+','+y+') scale('+s+')">'
       + '<path d="M14 34 C-4 40 -8 66 2 84" fill="none" stroke="'+P.mane+'" stroke-width="9" stroke-linecap="round"/>'
       + '<path d="M30 64 L22 84 L20 105" fill="none" stroke="'+c+'" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/>'
       + '<path d="M78 64 L72 84 L70 105" fill="none" stroke="'+c+'" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/>'
@@ -721,7 +784,7 @@ function figure(who, rotted){
           + '<circle cx="128" cy="-12" r="4" fill="#FF7FD8" opacity=".6"/>'
           + '<circle cx="134" cy="-21" r="2.6" fill="#FF7FD8" opacity=".4"/></g>'
         : '')
-      + '</g>';
+      + '</g></g>';
   }
 
   function wheel(cx, cy, r){
@@ -947,6 +1010,7 @@ function figure(who, rotted){
   /* ---------- 6. Krishna at the reins, in the lowered driver's well ---------- */
   if(!isK){
     var kx = 274, ky = 136;
+    out += '<g class="krishna">';
     out += '<path d="M'+kx+' '+(ky+20)+' L'+(kx+3)+' '+(ky+50)+'" stroke="'+P.kSkin+'" stroke-width="34" stroke-linecap="round"/>'
       + '<path d="M'+(kx-17)+' '+(ky+26)+' L'+(kx+20)+' '+(ky+26)+' L'+(kx+24)+' '+(ky+58)+' L'+(kx-21)+' '+(ky+58)+' Z" fill="'+P.gold+'"/>'
       + '<path d="M'+(kx-16)+' '+(ky+22)+' Q'+kx+' '+(ky+36)+' '+(kx+16)+' '+(ky+22)+'" fill="none" stroke="'+P.white+'" stroke-width="3" stroke-dasharray="1.6 3.4" stroke-linecap="round"/>'
@@ -979,6 +1043,7 @@ function figure(who, rotted){
       + '<ellipse cx="'+(kx+28)+'" cy="'+(ky-65)+'" rx="1.5" ry="2.2" transform="rotate(32 '+(kx+28)+' '+(ky-65)+')" fill="#12233F"/>'
       + '<path d="M'+(kx+50)+' '+(ky+24)+' Q'+(kx+92)+' '+(ky+16)+' '+(kx+150)+' '+(ky+6)+'" fill="none" stroke="'+P.pinkDk+'" stroke-width="2.6"/>'
       + '<path d="M'+(kx+50)+' '+(ky+27)+' Q'+(kx+88)+' '+(ky+30)+' '+(kx+128)+' '+(ky+26)+'" fill="none" stroke="'+P.pinkDk+'" stroke-width="2.6"/>';
+    out += '</g>';
   }
 
   /* ---------- 7. chariot wall, drawn over the legs ---------- */
@@ -1662,17 +1727,30 @@ function transformation(){
   .then(function(){
     if(!reduced) tube.classList.add('signal-loss');
     Snd.cue('transform'); Snd.duck(0.22, 500);
+    $('fig-r').classList.add('morphing');
     say('Something goes out of Arjuna then, and something else stands up in its place. Sixty-two years of dharma slide off his shoulders like wet cloth. <em>What is underneath is taller, and does not need the law.</em>');
-    return beat(reduced ? 1200 : 4600);
+    return beat(reduced ? 900 : 4200);
   })
   .then(function(){
+    burstFX('arjuna');
+    Snd.cue('impact');
+    return beat(reduced ? 60 : 200);
+  })
+  .then(function(){
+    /* the swap lands inside the whiteout, so nothing is seen to pop */
     tube.classList.remove('signal-loss');
     tube.classList.add('corrupted');
     G.arjuna.sup = true;
     G.arjuna.hp = 30;
+    $('fig-r').classList.remove('morphing');
     renderFigures(); renderHUD();
+    $('fig-r').classList.add('erupting');
     say('Whatever is holding Gandiva now is not tired, and is not sorry. <strong>महा-अर्जुन.</strong>');
-    return beat(3600);
+    return beat(reduced ? 200 : 1200);
+  })
+  .then(function(){
+    $('fig-r').classList.remove('erupting');
+    return beat(2400);
   })
   .then(function(){
     G.karna.boon = true;
@@ -1716,6 +1794,19 @@ var ENDINGS = {
     body:'Karna fell while he was still standing — still armed, still remembering every weapon he was ever taught. No curse was needed this afternoon, and no charioteer had to whisper anything. <em>Whether that counts as a mercy is not mine to decide.</em> I only keep the time.'
   }
 };
+
+function burstFX(side){
+  var field = $('field'); if(!field) return;
+  var el = document.createElement('div');
+  el.className = 'burstfx';
+  el.style.left = (side === 'karna' ? 27 : 73) + '%';
+  el.innerHTML = '<span class="glare"></span><span class="ring"></span>'
+               + '<span class="ring r2"></span><span class="ring r3"></span>';
+  field.appendChild(el);
+  field.classList.add('flash');
+  setTimeout(function(){ field.classList.remove('flash'); }, 520);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 1500);
+}
 
 function sandSplash(side){
   var field = $('field'); if(!field) return;
@@ -1934,8 +2025,9 @@ function start(side){
   $('fig-l').classList.remove('sunk');
   $('fig-l').classList.remove('settled');
   ['fig-l','fig-r'].forEach(function(id){
-    $(id).classList.remove('dying','bleeding','falling');
+    $(id).classList.remove('dying','bleeding','falling','morphing','erupting');
   });
+  $('field').classList.remove('flash');
   $('field').classList.remove('sunk');
   var st0 = document.querySelector('.stage'); if(st0) st0.classList.remove('titan');
 
