@@ -309,6 +309,48 @@ button.knob:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
 .fighter[data-pose="draw"]  .pose-draw{display:block;}
 .fighter[data-pose="loose"] .pose-loose{display:block;}
 .wounds{pointer-events:none;}
+
+/* ---- the death ---- */
+.warrior{transform-box:view-box;}
+.death-arrow{opacity:0;}
+.fighter.dying .death-arrow{opacity:1;}
+.fighter.dying .warrior{animation:struck .55s ease;}
+@keyframes struck{
+  0%{transform:translate(0,0) rotate(0deg);}
+  25%{transform:translate(-4px,1px) rotate(-5deg);}
+  60%{transform:translate(2px,0) rotate(2deg);}
+  100%{transform:translate(0,0) rotate(0deg);}
+}
+.blood-drop{opacity:0;transform-box:fill-box;transform-origin:50% 0%;}
+.fighter.bleeding .blood-drop{animation:bleed 1.5s ease-in infinite;}
+@keyframes bleed{
+  0%{opacity:0;transform:translateY(0) scale(.3,.3);}
+  18%{opacity:1;transform:translateY(2px) scale(1,1);}
+  55%{opacity:1;transform:translateY(22px) scale(.85,1.8);}
+  100%{opacity:0;transform:translateY(48px) scale(.6,2.2);}
+}
+/* he goes over the rail and lands head-first, feet in the air */
+.fighter.falling .warrior{animation:topple 2.6s cubic-bezier(.42,.02,.72,1) forwards;}
+@keyframes topple{
+  0%  {transform:translate(0,0) rotate(0deg);}
+  9%  {transform:translate(-3px,1px) rotate(-7deg);}   /* rocked back by the hit */
+  24% {transform:translate(2px,0) rotate(5deg);}       /* hangs there a moment */
+  46% {transform:translate(18px,2px) rotate(36deg);}   /* goes over the rail */
+  68% {transform:translate(44px,-2px) rotate(92deg);}  /* clear of the car */
+  88% {transform:translate(66px,-2px) rotate(142deg);}
+  100%{transform:translate(73px,2px) rotate(158deg);}  /* head in the sand, feet up */
+}
+.fighter.falling .blood-drop{animation:none;opacity:0;}
+
+/* sand thrown up where he lands */
+.splash{position:absolute;bottom:8%;z-index:19;pointer-events:none;transform:translateX(-50%);}
+.splash i{position:absolute;display:block;border-radius:50%;background:#9A6C2C;opacity:0;
+  width:var(--s);height:var(--s);animation:grain .95s ease-out forwards;}
+@keyframes grain{
+  0%{opacity:0;transform:translate(0,0) scale(.35);}
+  16%{opacity:1;}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1);}
+}
 .fighter.hit{animation:jolt .34s ease;}
 @keyframes jolt{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}55%{transform:translateX(7px)}80%{transform:translateX(-3px)}}
 .car{transform-box:view-box;transform-origin:302px 230px;}
@@ -768,7 +810,8 @@ function figure(who, rotted){
   }
   out += quiver + '</g>';
 
-  /* ---------- 5. the warrior ---------- */
+  /* ---------- 5. the warrior — a group of his own, so he can fall out ---------- */
+  out += '<g class="warrior" style="transform-origin:'+(bx+18)+'px 176px">';
   out += '<path d="M'+(bx-9)+' 172 L'+(bx-11)+' 208" stroke="'+P.skin+'" stroke-width="14" stroke-linecap="round"/>'
        + '<path d="M'+(bx+9)+' 172 L'+(bx+12)+' 208" stroke="'+P.skin+'" stroke-width="14" stroke-linecap="round"/>'
        + '<path d="M'+(bx-19)+' 138 L'+(bx+19)+' 138 L'+(bx+24)+' 188 L'+(bx-24)+' 188 Z" fill="'+(isK?P.red:P.white)+'"/>'
@@ -888,6 +931,18 @@ function figure(who, rotted){
       + '<circle cx="'+(bx+13)+'" cy="52" r="3.6" fill="'+P.white+'"/>'
       + '<circle cx="'+bx+'" cy="12" r="5.5" fill="'+P.gold+'"/>';
   }
+
+  /* struck through the heart — both hidden until he is killed */
+  out += '<g class="death-arrow">'
+       + '<path d="M'+(bx+58)+' 94 L'+(bx+2)+' 122" stroke="'+P.white+'" stroke-width="3.6" stroke-linecap="round"/>'
+       + '<path d="M'+(bx+62)+' 88 L'+(bx+50)+' 94 L'+(bx+56)+' 99 L'+(bx+44)+' 104" fill="none" stroke="'+P.red+'" stroke-width="2.8" stroke-linejoin="round"/>'
+       + '<ellipse cx="'+(bx+2)+'" cy="122" rx="5.5" ry="4.5" fill="#5E0F16"/>'
+       + '<circle cx="'+(bx+1)+'" cy="121" r="2.4" fill="#C3283C"/>'
+       + '</g>'
+       + '<g class="blood-drop">'
+       + '<ellipse cx="'+(bx-1)+'" cy="128" rx="3.4" ry="4.4" fill="#C3283C"/>'
+       + '</g>';
+  out += '</g>';
 
   /* ---------- 6. Krishna at the reins, in the lowered driver's well ---------- */
   if(!isK){
@@ -1166,7 +1221,7 @@ function addWound(side){
   var st = G[side];
   if(!st.wounds) st.wounds = [];
   if(st.wounds.length >= 9) return;
-  var baseX = side === 'karna' ? 206 : 308;   /* arjuna's rig is mirrored */
+  var baseX = side === 'karna' ? 206 : 192;   /* local body centre — wounds live inside .warrior */
   st.wounds.push({
     x: baseX + (Math.random()*40 - 20),
     y: 104 + Math.random()*40,
@@ -1177,7 +1232,7 @@ function addWound(side){
 function paintWounds(side){
   var host = side === 'karna' ? $('fig-l') : $('fig-r');
   if(!host) return;
-  var svg = host.querySelector('svg'); if(!svg) return;
+  var svg = host.querySelector('.warrior') || host.querySelector('svg'); if(!svg) return;
   var old = svg.querySelector('.wounds'); if(old) old.parentNode.removeChild(old);
   var list = G && G[side] ? (G[side].wounds || []) : [];
   if(!list.length) return;
@@ -1662,6 +1717,52 @@ var ENDINGS = {
   }
 };
 
+function sandSplash(side){
+  var field = $('field'); if(!field) return;
+  var el = document.createElement('div');
+  el.className = 'splash';
+  el.style.left = (side === 'karna' ? 27 : 73) + '%';
+  var m = '';
+  for(var i = 0; i < 16; i++){
+    var a = (-150 + Math.random()*120) * Math.PI / 180;
+    var d = 24 + Math.random()*52;
+    m += '<i style="--dx:' + (Math.cos(a)*d).toFixed(1) + 'px;--dy:' + (Math.sin(a)*d).toFixed(1)
+       + 'px;--s:' + (3 + Math.random()*6).toFixed(1) + 'px;animation-delay:'
+       + (Math.random()*110).toFixed(0) + 'ms"></i>';
+  }
+  el.innerHTML = m;
+  field.appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 1500);
+}
+
+/* nobody cuts away from this */
+function playDeath(side){
+  var host = side === 'karna' ? $('fig-l') : $('fig-r');
+  if(!host) return beat(200);
+  var who = side === 'karna' ? 'Karna' : (G.arjuna.sup ? 'The thing that was Arjuna' : 'Arjuna');
+  host.setAttribute('data-pose','rest');
+  host.classList.add('dying');
+  Snd.cue('impact'); jolt(side);
+  say('The arrow goes in under the collarbone and does not come out the other side. <strong>' + who + ' does not fall yet.</strong>');
+  return beat(1400)
+    .then(function(){
+      host.classList.add('bleeding');
+      say('One drop, and then another, into dust that has been waiting all afternoon for it. <em>The bow goes out of his hand and nobody hears it land.</em>');
+      return beat(1700);
+    })
+    .then(function(){
+      host.classList.add('falling');
+      Snd.duck(0.3, 700);
+      say(who + ' is a very long time falling. Men who were standing there said afterwards that the sun went down with him.');
+      return beat(2500);
+    })
+    .then(function(){
+      sandSplash(side); Snd.cue('impact');
+      say('He goes into the sand head-first, and his feet are still in the air when the shouting starts.');
+      return beat(2000);
+    });
+}
+
 function finish(winner){
   G.over = true; G.busy = true;
   $('rack').innerHTML = '';
@@ -1670,9 +1771,11 @@ function finish(winner){
       ? 'karna-' + G.side
       : (G.transformed ? 'arjuna-fallen' : 'arjuna-clean');
   var E = ENDINGS[key];
-  Snd.bed(null, 900);
-  Snd.cue(winner === 'karna' ? 'victory' : 'defeat');
-  beat(1500).then(function(){
+  playDeath(winner === 'karna' ? 'arjuna' : 'karna').then(function(){
+    Snd.bed(null, 900);
+    Snd.cue(winner === 'karna' ? 'victory' : 'defeat');
+    return beat(1100);
+  }).then(function(){
     $('end-eyebrow').textContent = E.eye;
     $('end-dev').textContent = E.dev;
     $('end-lat').textContent = E.lat;
@@ -1830,6 +1933,9 @@ function start(side){
   $('fig-r').classList.remove('big','rotted');
   $('fig-l').classList.remove('sunk');
   $('fig-l').classList.remove('settled');
+  ['fig-l','fig-r'].forEach(function(id){
+    $(id).classList.remove('dying','bleeding','falling');
+  });
   $('field').classList.remove('sunk');
   var st0 = document.querySelector('.stage'); if(st0) st0.classList.remove('titan');
 
