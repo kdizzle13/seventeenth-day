@@ -300,6 +300,15 @@ button.knob:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
 .fighter.big{width:52%;}
 .stage.titan .fighter:not(.big){width:23%;}
 .fighter svg{width:100%;height:auto;display:block;}
+/* the archer holds one of four poses; cards fall back to the drawn pose */
+.pose{display:none;}
+.pose-draw{display:block;}
+.fighter[data-pose] .pose{display:none;}
+.fighter[data-pose="rest"]  .pose-rest{display:block;}
+.fighter[data-pose="nock"]  .pose-nock{display:block;}
+.fighter[data-pose="draw"]  .pose-draw{display:block;}
+.fighter[data-pose="loose"] .pose-loose{display:block;}
+.wounds{pointer-events:none;}
 .fighter.hit{animation:jolt .34s ease;}
 @keyframes jolt{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}55%{transform:translateX(7px)}80%{transform:translateX(-3px)}}
 .fighter svg{transition:transform 1.8s cubic-bezier(.35,0,.45,1);}
@@ -719,9 +728,21 @@ function figure(who, rotted){
   out += '<path d="M298 224 L406 212" stroke="'+P.wood+'" stroke-width="9" stroke-linecap="round"/>'
        + '<path d="M298 219 L406 207" stroke="'+P.gold+'" stroke-width="2.4" stroke-linecap="round"/>';
 
-  /* ---------- 4. chariot floor ---------- */
+  /* ---------- 4. chariot floor + the quiver standing in it ---------- */
   out += '<path d="M132 206 L306 206 L296 250 L142 250 Z" fill="'+P.wood+'"/>'
        + '<path d="M136 250 L300 250" stroke="'+P.goldDk+'" stroke-width="4"/>';
+
+  var qBase = [146, 156, 166, 176, 186, 196, 206];
+  var qTop  = [ 99,  91,  85,  82,  85,  91,  99];
+  var qLean = [-14, -10,  -5,   0,   5,  10,  14];
+  var quiver = '<g class="quiver">';
+  for(var qi = 0; qi < qBase.length; qi++){
+    var x0 = qBase[qi], y1 = qTop[qi], x1 = x0 + qLean[qi];
+    quiver += '<path d="M'+x0+' 186 L'+x1+' '+y1+'" stroke="'+P.white+'" stroke-width="3.2" stroke-linecap="round"/>'
+      + '<path d="M'+(x1-5.4)+' '+(y1+11)+' L'+x1+' '+(y1-4)+' L'+(x1+5.4)+' '+(y1+11)+' Z" fill="'+(isK?P.red:P.redDk)+'"/>'
+      + '<path d="M'+(x1-4.2)+' '+(y1+19)+' L'+x1+' '+(y1+7)+' L'+(x1+4.2)+' '+(y1+19)+' Z" fill="'+P.gold+'" opacity=".9"/>';
+  }
+  out += quiver + '</g>';
 
   /* ---------- 5. the warrior ---------- */
   out += '<path d="M'+(bx-9)+' 172 L'+(bx-11)+' 208" stroke="'+P.skin+'" stroke-width="14" stroke-linecap="round"/>'
@@ -749,17 +770,43 @@ function figure(who, rotted){
        + '<ellipse cx="'+(bx-29)+'" cy="107" rx="6.5" ry="4.5" fill="'+P.pinkLt+'"/>'
        + '<ellipse cx="'+(bx+29)+'" cy="107" rx="6.5" ry="4.5" fill="'+P.pinkLt+'"/>';
 
-  /* bow, string, nocked arrow, arms */
+  /* bow limb is always there; the string, arrow and arms swap between poses */
   var bowX = isK ? 272 : 250, nock = bx + 20;
+  var slack = 'M'+bowX+' 20 L'+bowX+' 172';
+  function arm(a, b, c){
+    return '<path d="M'+a[0]+' '+a[1]+' L'+b[0]+' '+b[1]+' L'+c[0]+' '+c[1]+'" fill="none" stroke="'+P.skin
+      + '" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>'
+      + '<circle cx="'+b[0]+'" cy="'+b[1]+'" r="6" fill="'+P.gold+'"/>';
+  }
+  var bowArm = arm([bx+15,110],[bx+42,100],[bowX-3,95]);
+
   out += '<path d="M'+bowX+' 20 Q'+(bowX+30)+' 96 '+bowX+' 172" fill="none" stroke="'+P.gold+'" stroke-width="6" stroke-linecap="round"/>'
-       + '<path d="M'+bowX+' 20 Q'+(bowX+36)+' 96 '+bowX+' 172" fill="none" stroke="'+P.goldLt+'" stroke-width="2" opacity=".7"/>'
+       + '<path d="M'+bowX+' 20 Q'+(bowX+36)+' 96 '+bowX+' 172" fill="none" stroke="'+P.goldLt+'" stroke-width="2" opacity=".7"/>';
+
+  /* at rest — string slack, drawing hand down at his side */
+  out += '<g class="pose pose-rest">'
+       + '<path d="'+slack+'" fill="none" stroke="'+P.white+'" stroke-width="2"/>'
+       + bowArm + arm([bx-15,110],[bx-30,124],[bx-26,146]) + '</g>';
+
+  /* reaching back into the quiver */
+  out += '<g class="pose pose-nock">'
+       + '<path d="'+slack+'" fill="none" stroke="'+P.white+'" stroke-width="2"/>'
+       + '<path d="M'+(bx-62)+' 112 L'+(bx-30)+' 90" stroke="'+P.white+'" stroke-width="2.6" stroke-linecap="round"/>'
+       + '<path d="M'+(bx-66)+' 118 L'+(bx-60)+' 108 L'+(bx-56)+' 116 Z" fill="'+(isK?P.red:P.redDk)+'"/>'
+       + bowArm + arm([bx-15,110],[bx-38,118],[bx-54,104]) + '</g>';
+
+  /* full draw — string back to the ear, arrow on the string */
+  out += '<g class="pose pose-draw">'
        + '<path d="M'+bowX+' 20 L'+nock+' 96 L'+bowX+' 172" fill="none" stroke="'+P.white+'" stroke-width="2"/>'
        + '<path d="M'+nock+' 96 L'+(bowX+64)+' 96" stroke="'+P.white+'" stroke-width="2.8"/>'
        + '<path d="M'+(bowX+70)+' 96 L'+(bowX+54)+' 88 L'+(bowX+54)+' 104 Z" fill="'+P.gold+'"/>'
-       + '<path d="M'+(bx+15)+' 110 L'+(bx+42)+' 100 L'+(bowX-3)+' 95" fill="none" stroke="'+P.skin+'" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>'
-       + '<path d="M'+(bx-15)+' 110 L'+(bx-21)+' 96 L'+(nock-2)+' 95" fill="none" stroke="'+P.skin+'" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>'
-       + '<circle cx="'+(bx+42)+'" cy="100" r="6" fill="'+P.gold+'"/>'
-       + '<circle cx="'+(bx-21)+'" cy="96" r="6" fill="'+P.gold+'"/>';
+       + '<path d="M'+(nock-2)+' 96 L'+(nock-10)+' 90 M'+(nock-2)+' 96 L'+(nock-10)+' 102" stroke="'+(isK?P.red:P.redDk)+'" stroke-width="2.4" stroke-linecap="round"/>'
+       + bowArm + arm([bx-15,110],[bx-21,96],[nock-2,95]) + '</g>';
+
+  /* loosed — string snapped flat, hand thrown past the ear */
+  out += '<g class="pose pose-loose">'
+       + '<path d="'+slack+'" fill="none" stroke="'+P.white+'" stroke-width="2.6" opacity=".9"/>'
+       + bowArm + arm([bx-15,110],[bx-14,96],[bx-36,84]) + '</g>';
 
   /* head */
   out += '<path d="M'+bx+' 96 L'+bx+' 106" stroke="'+P.skinDk+'" stroke-width="16"/>'
@@ -947,8 +994,8 @@ function fresh(side){
     busy: false,
     transformed: false,
     aiAct: null,
-    arjuna:{hp:MAXHP, ojas:4, cd:{}, used:{}, sup:false, blind:0},
-    karna:{hp:MAXHP, ojas:4, cd:{}, used:{}, sunk:false, boon:false, blind:0}
+    arjuna:{hp:MAXHP, ojas:4, cd:{}, used:{}, sup:false, blind:0, wounds:[]},
+    karna:{hp:MAXHP, ojas:4, cd:{}, used:{}, sunk:false, boon:false, blind:0, wounds:[]}
   };
 }
 function other(s){ return s==='arjuna' ? 'karna' : 'arjuna'; }
@@ -1047,6 +1094,9 @@ function renderHUD(){
 function renderFigures(){
   $('fig-l').innerHTML = figure('karna', false);
   $('fig-r').innerHTML = figure('arjuna', G.arjuna.sup);
+  $('fig-l').setAttribute('data-pose','rest');
+  $('fig-r').setAttribute('data-pose','rest');
+  paintWounds('karna'); paintWounds('arjuna');
   $('fig-r').classList.toggle('big', G.arjuna.sup);
   var st = document.querySelector('.stage');
   if(st) st.classList.toggle('titan', G.arjuna.sup);
@@ -1083,6 +1133,47 @@ function renderRack(){
       if(a) takeTurn(a);
     });
   });
+}
+
+/* a hit leaves a mark; a block or an evade leaves nothing */
+function addWound(side){
+  var st = G[side];
+  if(!st.wounds) st.wounds = [];
+  if(st.wounds.length >= 9) return;
+  var baseX = side === 'karna' ? 206 : 308;   /* arjuna's rig is mirrored */
+  st.wounds.push({
+    x: baseX + (Math.random()*40 - 20),
+    y: 104 + Math.random()*40,
+    r: 2.4 + Math.random()*2.0
+  });
+  paintWounds(side);
+}
+function paintWounds(side){
+  var host = side === 'karna' ? $('fig-l') : $('fig-r');
+  if(!host) return;
+  var svg = host.querySelector('svg'); if(!svg) return;
+  var old = svg.querySelector('.wounds'); if(old) old.parentNode.removeChild(old);
+  var list = G && G[side] ? (G[side].wounds || []) : [];
+  if(!list.length) return;
+  var m = '<g class="wounds">';
+  list.forEach(function(p){
+    m += '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(p.r*1.6).toFixed(1)+'" fill="#4A0A10" opacity=".8"/>'
+       + '<circle cx="'+(p.x+p.r*0.35).toFixed(1)+'" cy="'+(p.y-p.r*0.25).toFixed(1)+'" r="'+p.r.toFixed(1)+'" fill="#C3283C"/>'
+       + '<circle cx="'+(p.x-p.r*0.5).toFixed(1)+'" cy="'+(p.y+p.r*0.6).toFixed(1)+'" r="'+(p.r*0.55).toFixed(1)+'" fill="#8C1526"/>';
+  });
+  svg.insertAdjacentHTML('beforeend', m + '</g>');
+}
+
+/* pull from the quiver, draw against the bow, loose */
+function drawAndLoose(side){
+  var host = side === 'karna' ? $('fig-l') : $('fig-r');
+  function pose(p){ if(host) host.setAttribute('data-pose', p); }
+  if(reduced){ pose('draw'); return beat(60); }
+  pose('nock');
+  return beat(200)
+    .then(function(){ pose('draw'); return beat(240); })
+    .then(function(){ return beat(90); })
+    .then(function(){ pose('loose'); });
 }
 
 function say(html){ $('narration').innerHTML = html; }
@@ -1384,9 +1475,13 @@ function playShot(side, act, e){
     renderHUD();
     return beat(640);
   }
-  return fly(side, act).then(function(){
+  var host = side === 'karna' ? $('fig-l') : $('fig-r');
+  return drawAndLoose(side).then(function(){
+    return fly(side, act);
+  }).then(function(){
+    if(host) host.setAttribute('data-pose','rest');
     applyEffect(side, e);
-    if(e.dmg){ Snd.cue('impact'); jolt(foe); pop(foe, '\u2212'+e.dmg, e.dmg >= 35 ? 'crit' : 'dmg'); }
+    if(e.dmg){ Snd.cue('impact'); jolt(foe); addWound(foe); pop(foe, '\u2212'+e.dmg, e.dmg >= 35 ? 'crit' : 'dmg'); }
     if(e.backlash) pop(side, '\u2212'+e.backlash, 'dmg');
     if(e.blocked)  pop(foe, 'unmade', 'block');
     if(e.evaded)   pop(foe, 'evaded', 'block');
